@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import subprocess
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Sequence
-
 
 DEFAULT_PATTERNS: tuple[str, ...] = (
     "*.wav",
