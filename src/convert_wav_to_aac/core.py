@@ -1,4 +1,4 @@
-"""Core conversion helpers."""
+"""Core conversion helpers for AAC outputs."""
 
 from __future__ import annotations
 
@@ -24,9 +24,9 @@ DEFAULT_PATTERNS: tuple[str, ...] = tuple(
     f"*{extension}" for extension in SUPPORTED_INPUT_EXTENSIONS
 )
 
-_OUTPUT_EXTENSION = ".opus"
-_OUTPUT_CODEC = "libopus"
-_DEFAULT_BITRATE = "24k"
+_OUTPUT_EXTENSION = ".aac"
+_OUTPUT_CODEC = "libfdk_aac"
+_DEFAULT_BITRATE = "96k"
 
 DEFAULT_BITRATE = _DEFAULT_BITRATE
 
@@ -36,6 +36,7 @@ def _same_path(a: Path, b: Path) -> bool:
         return a.resolve() == b.resolve()
     except FileNotFoundError:
         return a.absolute() == b.absolute()
+
 
 class ConversionError(RuntimeError):
     """Raised when a conversion fails."""
@@ -71,7 +72,7 @@ def collect_audio_files(root: Path, patterns: Iterable[str], recursive: bool) ->
     return sorted(files)
 
 
-def sanitize_output(source: Path, *, output_extension: str = ".opus") -> Path:
+def sanitize_output(source: Path, *, output_extension: str = _OUTPUT_EXTENSION) -> Path:
     """Return a path adjacent to ``source`` using a safe file name and extension."""
     safe_name = source.stem.lower().replace("-", "_").replace(" ", "_")
     return source.with_name(f"{safe_name}{output_extension}")
@@ -92,7 +93,7 @@ def convert_file(
     sample_rate: int | None,
     runner: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ffmpeg,
 ) -> None:
-    """Convert a single file to the requested format, raising ConversionError on failure."""
+    """Convert a single file to AAC, raising ConversionError on failure."""
     if dry_run:
         return
 
@@ -113,8 +114,6 @@ def convert_file(
 
     if channels is not None:
         command.extend(["-ac", str(channels)])
-
-    command.extend(["-vbr", "on"])
 
     if sample_rate is not None:
         command.extend(["-ar", str(sample_rate)])
@@ -147,10 +146,7 @@ def convert_directory(
     on_skip: Callable[[Path, Path], None] | None = None,
     on_failure: Callable[[ConversionError], None] | None = None,
 ) -> ConversionSummary:
-    """Convert files within ``root`` according to the supplied options.
-
-    When ``bitrate`` is omitted, the Opus default of 24 kb/s is applied.
-    """
+    """Convert files within ``root`` according to the supplied options."""
     source_patterns = tuple(patterns) if patterns is not None else DEFAULT_PATTERNS
     audio_files = collect_audio_files(root, source_patterns, recursive)
 

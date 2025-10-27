@@ -1,17 +1,18 @@
 # convert_wav_to_opus
 
-convert_wav_to_opus scans a directory for audio files and generates companion Opus (`.opus`) encodes using `ffmpeg`. Use it to shrink podcasts, voice notes, or music libraries while keeping a simple, repeatable workflow.
+convert_wav_to_opus scans a directory for audio files and generates companion encodes using `ffmpeg`. Use the Opus CLI for `.opus` outputs or the AAC CLI for `.aac`, keeping a simple, repeatable workflow for podcasts, voice notes, or music libraries.
 
 ## Features
-- Converts the most common audio formats to `.opus` using the libopus encoder.
+- Converts the most common audio formats to `.opus` (libopus, default 24 kbps) or `.aac` (libfdk_aac, default 96 kbps).
 - Creates filesystem-friendly output names alongside the original files.
-- Skips existing `.opus` files unless `--overwrite` is supplied.
+- Skips existing output files unless `--overwrite` is supplied.
 - Supports dry runs so you can preview the work before it happens.
-- Ships as both a CLI (`convert_wav_to_opus`) and a small Python API.
+- Preserves the source channel layout unless you choose to override it.
+- Ships with dedicated CLIs (`convert_wav_to_opus` and `convert_wav_to_aac`) plus a small Python API.
 
 ## Requirements
 - Python 3.9 or newer.
-- [`ffmpeg`](https://ffmpeg.org/) available on your `PATH`.
+- [`ffmpeg`](https://ffmpeg.org/) available on your `PATH` (with `libfdk_aac` support if you plan to use the AAC CLI).
 
 ## Installation
 
@@ -33,32 +34,61 @@ python -m pip install .  # add ".[dev]" for linting + tests
 convert_wav_to_opus ~/Music --recursive
 ```
 
-### Common options
+## CLI tools
+
+### convert_wav_to_opus
 
 | Flag | Description | Default |
 |------|-------------|---------|
 | `--patterns` | Override input glob patterns (e.g. `--patterns "*.wav" "*.flac"`). | Common audio formats |
 | `--recursive` | Traverse subdirectories. | Off |
-| `--bitrate` | Target bitrate to request from `ffmpeg`. | `32k` |
-| `--channels` | Channel count for the output audio. | `1` |
-| `--overwrite` | Replace existing `.opus` outputs. | Off |
+| `--bitrate` | Target bitrate to request from `ffmpeg`. | `24k` |
+| `--channels` | Override channel count for the output audio. | Source layout |
+| `--mono` | Shortcut to force mono output. | Off |
+| `--sample-rate` | Output sample rate in Hz. | Source rate |
+| `--overwrite` | Replace existing outputs. | Off |
+| `--dry-run` | Print planned conversions without touching files. | Off |
+
+### convert_wav_to_aac
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--patterns` | Override input glob patterns (e.g. `--patterns "*.wav" "*.flac"`). | Common audio formats |
+| `--recursive` | Traverse subdirectories. | Off |
+| `--bitrate` | Target bitrate to request from `ffmpeg` (uses `libfdk_aac`). | `96k` |
+| `--channels` | Override channel count for the output audio. | Source layout |
+| `--mono` | Shortcut to force mono output. | Off |
+| `--sample-rate` | Output sample rate in Hz. | Source rate |
+| `--overwrite` | Replace existing outputs. | Off |
 | `--dry-run` | Print planned conversions without touching files. | Off |
 
 ### Examples
 
-Convert everything in `~/Podcasts`, including subdirectories:
+Convert everything in `~/Podcasts`, including subdirectories, to Opus:
 
 ```bash
 convert_wav_to_opus ~/Podcasts --recursive
 ```
 
-Re-encode only FLAC and WAV files to stereo 48 kbps outputs:
+Convert everything in place to AAC instead:
 
 ```bash
-convert_wav_to_opus /data/audio --patterns "*.flac" "*.wav" --bitrate 48k --channels 2
+convert_wav_to_aac /data/audio --recursive
 ```
 
-Preview the work that would be done:
+Re-encode only FLAC, WAV, and AAC files to stereo 48 kbps Opus outputs:
+
+```bash
+convert_wav_to_opus /data/audio --patterns "*.flac" "*.wav" "*.aac" --bitrate 48k --channels 2
+```
+
+Force AAC outputs to 22.05 kHz if you need to reduce bandwidth further:
+
+```bash
+convert_wav_to_aac /data/audio --sample-rate 22050
+```
+
+Preview the work that would be done (applies to either CLI):
 
 ```bash
 convert_wav_to_opus /data/audio --dry-run

@@ -1,4 +1,4 @@
-"""Command-line interface for convert_wav_to_opus."""
+"""Command-line interface for convert_wav_to_aac."""
 
 from __future__ import annotations
 
@@ -6,14 +6,15 @@ import argparse
 from collections.abc import Sequence
 from pathlib import Path
 
-from . import __version__
+from convert_wav_to_opus import __version__  # reuse shared version
+
 from .core import DEFAULT_PATTERNS, ConversionError, convert_directory
 
 
 def build_parser() -> argparse.ArgumentParser:
     """Return the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
-        description="Convert audio files in a directory to Opus using ffmpeg.",
+        description="Convert audio files in a directory to AAC using ffmpeg.",
     )
     parser.add_argument(
         "directory",
@@ -31,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--bitrate",
         default=None,
-        help="Target bitrate for libopus (default: 24k).",
+        help="Target bitrate for AAC (default: 96k).",
     )
     parser.add_argument(
         "--channels",
@@ -43,6 +44,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--mono",
         action="store_true",
         help="Force mono output (overrides --channels).",
+    )
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=None,
+        help="Sample rate for the output audio in Hz (default: keep source rate).",
     )
     parser.add_argument(
         "--recursive",
@@ -58,12 +65,6 @@ def build_parser() -> argparse.ArgumentParser:
         "--dry-run",
         action="store_true",
         help="Show planned actions without running ffmpeg.",
-    )
-    parser.add_argument(
-        "--sample-rate",
-        type=int,
-        default=None,
-        help="Sample rate for the output audio in Hz (default: keep source rate).",
     )
     parser.add_argument(
         "--version",
@@ -88,6 +89,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.error("--mono cannot be combined with --channels (use one or the other).")
         channels = 1
 
+    bitrate = args.bitrate
+    sample_rate = args.sample_rate
+
     def on_convert(source: Path, output: Path, dry_run: bool) -> None:
         action = "Planning" if dry_run else "Converting"
         print(f"{action} '{source}' -> '{output.name}'")
@@ -103,11 +107,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         root,
         patterns=args.patterns,
         recursive=args.recursive,
-        bitrate=args.bitrate,
+        bitrate=bitrate,
         channels=channels,
         overwrite=args.overwrite,
         dry_run=args.dry_run,
-        sample_rate=args.sample_rate,
+        sample_rate=sample_rate,
         on_convert=on_convert,
         on_skip=on_skip,
         on_failure=on_failure,

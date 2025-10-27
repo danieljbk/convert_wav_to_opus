@@ -1,4 +1,4 @@
-"""Public package interface for convert_wav_to_opus."""
+"""Public package interface for convert_wav_to_aac."""
 
 from __future__ import annotations
 
@@ -23,5 +23,3 @@ __all__ = [
     "convert_directory",
     "sanitize_output",
 ]
-
-__version__ = "0.1.0"

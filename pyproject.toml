@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "convert_wav_to_opus"
 version = "0.1.0"
-description = "Convert audio files to Opus using ffmpeg."
+description = "Convert audio files to Opus or AAC using ffmpeg."
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "Daniel Kwon" }]
@@ -36,6 +36,7 @@ dev = [
 
 [project.scripts]
 convert_wav_to_opus = "convert_wav_to_opus.cli:main"
+convert_wav_to_aac = "convert_wav_to_aac.cli:main"
 
 [tool.pytest.ini_options]
 addopts = "-ra"
