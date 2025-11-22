@@ -66,6 +66,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Sample rate for the output audio in Hz (default: keep source rate).",
     )
     parser.add_argument(
+        "--application",
+        choices=["voip", "audio", "lowdelay"],
+        default=None,
+        help="Opus application type: 'voip' for speech, 'audio' for music (default: auto).",
+    )
+    parser.add_argument(
+        "--music",
+        action="store_true",
+        help="Use music preset: sets bitrate to 128k and application to 'audio' (overrides --bitrate and --application).",
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}",
@@ -88,6 +99,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             parser.error("--mono cannot be combined with --channels (use one or the other).")
         channels = 1
 
+    # Handle music preset
+    bitrate = args.bitrate
+    application = args.application
+    if args.music:
+        bitrate = "128k"
+        application = "audio"
+
     def on_convert(source: Path, output: Path, dry_run: bool) -> None:
         action = "Planning" if dry_run else "Converting"
         print(f"{action} '{source}' -> '{output.name}'")
@@ -103,11 +121,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         root,
         patterns=args.patterns,
         recursive=args.recursive,
-        bitrate=args.bitrate,
+        bitrate=bitrate,
         channels=channels,
         overwrite=args.overwrite,
         dry_run=args.dry_run,
         sample_rate=args.sample_rate,
+        application=application,
         on_convert=on_convert,
         on_skip=on_skip,
         on_failure=on_failure,

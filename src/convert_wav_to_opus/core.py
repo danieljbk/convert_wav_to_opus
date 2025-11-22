@@ -90,6 +90,7 @@ def convert_file(
     channels: int | None,
     dry_run: bool,
     sample_rate: int | None,
+    application: str | None = None,
     runner: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ffmpeg,
 ) -> None:
     """Convert a single file to the requested format, raising ConversionError on failure."""
@@ -110,6 +111,9 @@ def convert_file(
         "-b:a",
         bitrate,
     ]
+
+    if application is not None:
+        command.extend(["-application", application])
 
     if channels is not None:
         command.extend(["-ac", str(channels)])
@@ -142,6 +146,7 @@ def convert_directory(
     overwrite: bool = False,
     dry_run: bool = False,
     sample_rate: int | None = None,
+    application: str | None = None,
     runner: Callable[[Sequence[str]], subprocess.CompletedProcess[str]] = _run_ffmpeg,
     on_convert: Callable[[Path, Path, bool], None] | None = None,
     on_skip: Callable[[Path, Path], None] | None = None,
@@ -183,6 +188,7 @@ def convert_directory(
                 channels=channels,
                 dry_run=dry_run,
                 sample_rate=effective_sample_rate,
+                application=application,
                 runner=runner,
             )
         except ConversionError as error:
